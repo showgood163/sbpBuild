@@ -89,7 +89,7 @@ jobs:
 
     # Prepare Qt Framework
     - name: Install Qt6 x64
-        run: SandboxiePlus\install_qt.cmd x64
+      run: SandboxiePlus\install_qt.cmd x64
 
     - name: Installing Jom
     #  if: steps.cache-qt.outputs.cache-hit != 'true'
