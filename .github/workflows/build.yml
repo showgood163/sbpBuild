@@ -1,0 +1,92 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Build AdguardHome binary for armv7-softfloat
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+#  push:
+#    branches:
+#      - 'main'
+#  pull_request:
+#    branches:
+#      - 'main'
+  # Triggers the workflow every hour
+#  schedule:
+#    - cron: '0 * * * *'
+  # Keep manual trigger and push events
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      new_version_available: ${{ steps.check_version.outputs.new_version_available }}
+      latest_tag: ${{ steps.check_version.outputs.latest_tag }}
+
+    steps:
+    - name: Check latest release
+      id: check_version
+      run: |
+        # Get the latest release tag from AdGuard Home repository
+        latest_tag=$(curl -s https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest | jq -r '.tag_name')
+        echo "Latest AdGuard Home version: $latest_tag"
+        echo "latest_tag=${latest_tag}" >> $GITHUB_OUTPUT
+        
+        # Get the latest release in current repository
+        current_tag=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
+        echo "Current built version: $current_tag"
+        echo "current_tag=${current_tag}" >> $GITHUB_OUTPUT
+        
+        if [ "$latest_tag" != "$current_tag" ]; then
+          echo "new_version_available=true" >> $GITHUB_OUTPUT
+          echo "New version detected! Will trigger build job."
+        else
+          echo "new_version_available=false" >> $GITHUB_OUTPUT
+          echo "No new version available. Skipping build."
+        fi
+
+  build:
+    needs: check-version
+    if: needs.check-version.outputs.new_version_available == 'true'
+    runs-on: ubuntu-latest
+
+    env:
+      GO_VERSION: '1.25.3'
+      NODE_VERSION: '20'
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '${{ env.GO_VERSION }}'
+
+    - name: setup node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '${{ env.NODE_VERSION }}'
+
+    - name: Set up QEMU for arm compilation
+      uses: docker/setup-qemu-action@v1
+
+    - name: Build binary
+      run: |
+        git clone https://github.com/AdguardTeam/AdGuardHome.git
+        cd AdGuardHome
+        git checkout ${{ needs.check-version.outputs.latest_tag }}
+        env GOOS='linux' GOARCH='arm' GOARM='7,softfloat' make
+        ls -al
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ needs.check-version.outputs.latest_tag }}
+        body: "AdGuardHome arm 7,softfloat ${{ needs.check-version.outputs.latest_tag }}"
+        files: "./AdGuardHome/AdGuardHome"
