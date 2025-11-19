@@ -33,9 +33,9 @@ jobs:
     - name: Check latest release
       id: check_version
       run: |
-        # Get the latest release tag from AdGuard Home repository
-        latest_tag=$(curl -s "https://api.github.com/repos/${{ workspace }}/releases/latest" | jq -r '.tag_name')
-        echo "Latest AdGuard Home version: $latest_tag"
+        # Get the latest release tag from SBP repository
+        latest_tag=$(curl -s https://api.github.com/repos/sandboxie-plus/Sandboxie/releases/latest | jq -r '.tag_name')
+        echo "Latest SBP version: $latest_tag"
         echo "latest_tag=${latest_tag}" >> $GITHUB_OUTPUT
         
         # Get the latest release in current repository
@@ -63,14 +63,14 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        repository: ${{ workspace }}
+        repository: sandboxie-plus/Sandboxie
         ref: ${{ needs.check-version.outputs.latest_tag }}
 
     - name: Load Variables from buildVariables.cmd
       shell: cmd
       run: |
         @echo on
-        call "${{ workspace }}\Installer\buildVariables.cmd" build_qt6
+        call "Sandboxie\Installer\buildVariables.cmd" build_qt6
         echo qt6_version=%qt6_version% >> %GITHUB_ENV%
         echo qt_version=%qt6_version% >> %GITHUB_ENV%
 
@@ -126,7 +126,7 @@ jobs:
       #if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
       uses: actions/upload-artifact@v5.0.0
       with:
-        name: Sandboxie_x64
+        name: SBP
         path: |
           Installer/SbiePlus_x64/*
         retention-days: 60
@@ -135,7 +135,7 @@ jobs:
       #if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
       uses: actions/upload-artifact@v5.0.0
       with:
-        name: SandMan_x64
+        name: SandMan
         path: |
           Installer/SbiePlus_x64/SandMan.exe
         retention-days: 60
