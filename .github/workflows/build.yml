@@ -70,7 +70,7 @@ jobs:
       shell: cmd
       run: |
         @echo on
-        call "Sandboxie\Installer\buildVariables.cmd" build_qt6
+        call "${{ github.workspace }}\Installer\buildVariables.cmd" build_qt6
         echo qt6_version=%qt6_version% >> %GITHUB_ENV%
         echo qt_version=%qt6_version% >> %GITHUB_ENV%
 
