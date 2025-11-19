@@ -61,10 +61,17 @@ jobs:
 
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: sandboxie-plus/Sandboxie
         ref: ${{ needs.check-version.outputs.latest_tag }}
+    
+    # Edit code
+    - name: Edit code
+      run: |
+        (Get-Content -Path "./Sandboxie/apps/start/aboutdlg.cpp") -replace 'g_bReminder = bReminder;', 'g_bReminder = FALSE;' | Set-Content -Path "./Sandboxie/apps/start/aboutdlg.cpp"
+        (Get-Content -Path "./SandboxiePlus/SandMan/Windows/SupportDialog.cpp") -replace 'bool NoGo = false;', 'return false;' | Set-Content -Path "./SandboxiePlus/SandMan/Windows/SupportDialog.cpp"
+      shell: powershell
 
     - name: Load Variables from buildVariables.cmd
       shell: cmd
@@ -131,12 +138,10 @@ jobs:
           Installer/SbiePlus_x64/*
         retention-days: 60
 
-    - name: Upload Sandboxie x64 binary
-      #if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-      uses: actions/upload-artifact@v5.0.0
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
       with:
-        name: SandMan
-        path: |
-          Installer/SbiePlus_x64/SandMan.exe
-        retention-days: 60
+        tag_name: ${{ needs.check-version.outputs.latest_tag }}
+        body: "SBP ${{ needs.check-version.outputs.latest_tag }} SandMan"
+        files: "Installer/SbiePlus_x64/SandMan.exe"
 
