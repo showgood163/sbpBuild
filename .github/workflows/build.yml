@@ -67,10 +67,13 @@ jobs:
         ref: ${{ needs.check-version.outputs.latest_tag }}
     
     # Edit code
+    # (Get-Content -Path "./SandboxiePlus/SandMan/Windows/SupportDialog.cpp") -replace 'int Days = InstallDate.daysTo(CurretnDate);', 'int Days = 1;' | Set-Content -Path "./SandboxiePlus/SandMan/Windows/SupportDialog.cpp"
     - name: Edit code
       run: |
-        (Get-Content -Path "./Sandboxie/apps/start/aboutdlg.cpp") -replace 'g_bReminder = bReminder;', 'g_bReminder = FALSE;' | Set-Content -Path "./Sandboxie/apps/start/aboutdlg.cpp"
-        (Get-Content -Path "./SandboxiePlus/SandMan/Windows/SupportDialog.cpp") -replace 'int Days = InstallDate.daysTo(CurretnDate);', 'int Days = 1;' | Set-Content -Path "./SandboxiePlus/SandMan/Windows/SupportDialog.cpp"
+        (Get-Content -Path "./Sandboxie/core/drv/verify.c") -replace 'NTSTATUS status;', 'NTSTATUS status=STATUS_SUCCESS;' | Set-Content -Path "./Sandboxie/core/drv/verify.c"
+        (Get-Content -Path "./Sandboxie/core/drv/verify.c" -Raw) -replace 'PVOID hash = NULL;\r?\n    ULONG hashSize;', "PVOID hash = NULL;`n    ULONG hashSize;`n    goto CleanupExit;" | Set-Content -Path "./Sandboxie/core/drv/verify.c"
+        (Get-Content -Path "./Sandboxie/core/drv/verify.c" -Raw) -replace 'PUNICODE_STRING signatureFileName = NULL;\r?\n    ULONG signatureSize = 0;\r?\n    PUCHAR signature = NULL;', "PUNICODE_STRING signatureFileName = NULL;`n    ULONG signatureSize = 0;`n    PUCHAR signature = NULL;`n    goto CleanupExit;" | Set-Content -Path "./Sandboxie/core/drv/verify.c"
+        (Get-Content -Path "./Sandboxie/core/drv/verify.c") -replace 'Verify_CertInfo.State = 0; // clear', "Verify_CertInfo.State = 0;`n    Verify_CertInfo.active = 1;`n    Verify_CertInfo.type = eCertEternal;`n    Verify_CertInfo.level = eCertMaxLevel;`n    expiration_date.QuadPart = -1;`n    Verify_CertInfo.opt_desk = 1;`n    goto CleanupExit;" | Set-Content -Path "./Sandboxie/core/drv/verify.c"
       shell: powershell
 
     - name: Load Variables from buildVariables.cmd
