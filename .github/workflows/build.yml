@@ -70,7 +70,7 @@ jobs:
     - name: Edit code
       run: |
         (Get-Content -Path "./Sandboxie/apps/start/aboutdlg.cpp") -replace 'g_bReminder = bReminder;', 'g_bReminder = FALSE;' | Set-Content -Path "./Sandboxie/apps/start/aboutdlg.cpp"
-        (Get-Content -Path "./SandboxiePlus/SandMan/Windows/SupportDialog.cpp") -replace 'bool NoGo = false;', 'return false;' | Set-Content -Path "./SandboxiePlus/SandMan/Windows/SupportDialog.cpp"
+        (Get-Content -Path "./SandboxiePlus/SandMan/Windows/SupportDialog.cpp") -replace 'int Days = InstallDate.daysTo(CurretnDate);', 'int Days = 1;' | Set-Content -Path "./SandboxiePlus/SandMan/Windows/SupportDialog.cpp"
       shell: powershell
 
     - name: Load Variables from buildVariables.cmd
